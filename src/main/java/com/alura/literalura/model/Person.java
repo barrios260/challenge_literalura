@@ -1,27 +1,51 @@
 package com.alura.literalura.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true) // Ignorar propiedades desconocidas
 public class Person {
+
     private String name;
-    private Integer birth_year;
-    private Integer death_year;
+
+    @JsonAlias("birth_year") // Alias para mapear correctamente
+    private Integer birthYear;
+
+    @JsonAlias("death_year") // Alias para mapear correctamente
+    private Integer deathYear;
 
     // Getters y Setters
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }
-    public Integer getBirth_year() {
-        return birth_year;
+
+    public Integer getBirthYear() {
+        return birthYear;
     }
-    public void setBirth_year(Integer birth_year) {
-        this.birth_year = birth_year;
+
+    public void setBirthYear(Integer birthYear) {
+        this.birthYear = birthYear;
     }
-    public Integer getDeath_year() {
-        return death_year;
+
+    public Integer getDeathYear() {
+        return deathYear;
     }
-    public void setDeath_year(Integer death_year) {
-        this.death_year = death_year;
+
+    public void setDeathYear(Integer deathYear) {
+        this.deathYear = deathYear;
+    }
+
+    // Método toString para mostrar los datos de la persona
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", birthYear=" + birthYear +
+                ", deathYear=" + deathYear +
+                '}';
     }
 }
