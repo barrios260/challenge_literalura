@@ -2,23 +2,23 @@ package com.alura.literalura.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
 
 import java.util.List;
 
-@Entity
-public class Book {
+@JsonIgnoreProperties(ignoreUnknown = true) // Ignorar propiedades desconocidas
+public class BookDto {
 
-    @Id
     private int id;
 
     private String title;
 
-    @OneToOne
-    private Person author;
+    @JsonAlias("authors") // Alias para mapear correctamente
+    private List<PersonDto> author;
 
     private String language;
 
+
+    @JsonAlias("download_count") // Alias para mapear el atributo del JSON
     private int downloadCount;
 
     // Getters y Setters
@@ -46,11 +46,11 @@ public class Book {
         this.language = language;
     }
 
-    public Person getAuthor() {
+    public List<PersonDto> getAuthor() {
         return author;
     }
 
-    public void setAuthor(Person author) {
+    public void setAuthor(List<PersonDto> author) {
         this.author = author;
     }
 
@@ -73,4 +73,3 @@ public class Book {
                 '}';
     }
 }
-

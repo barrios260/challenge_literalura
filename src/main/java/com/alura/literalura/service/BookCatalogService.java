@@ -1,21 +1,31 @@
 package com.alura.literalura.service;
 
-import com.alura.literalura.model.Book;
-import com.alura.literalura.model.HttpClientService;
-import com.alura.literalura.model.Person;
+import com.alura.literalura.model.*;
+import com.alura.literalura.repository.BookRepository;
+import com.alura.literalura.repository.PersonRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class BookCatalogService {
 
-    private final List<Book> catalog = new ArrayList<>(); // Lista para almacenar los libros
+    private final List<BookDto> catalog = new ArrayList<>(); // Lista para almacenar los libros
     private final HttpClientService clientService = new HttpClientService();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final BookRepository bookRepository;
+    private final PersonRepository personRepository;
+
+
+    public BookCatalogService(BookRepository bookRepository, PersonRepository personRepository) {
+        this.bookRepository = bookRepository;
+        this.personRepository = personRepository;
+    }
 
     /**
      * Busca un libro por título en la API y guarda el primer resultado en el catálogo.
@@ -44,23 +54,25 @@ public class BookCatalogService {
                 String bookTitle = result.path("title").asText().toLowerCase();
                 if (bookTitle.contains(title.toLowerCase())) {
                     // Crear un nuevo objeto Book usando los datos del resultado filtrado
-                    Book book = new Book();
+                    BookDto book = new BookDto();
                     book.setId(result.path("id").asInt());
                     book.setTitle(result.path("title").asText());
 
                     // Mapear la lista de autores (Person)
-                    List<Person> authors = new ArrayList<>();
-                    result.path("authors").forEach(authorNode -> {
-                        Person person = new Person();
-                        person.setName(authorNode.path("name").asText());
-                        person.setBirthYear(authorNode.path("birth_year").isMissingNode() ? null : authorNode.path("birth_year").asInt());
-                        person.setDeathYear(authorNode.path("death_year").isMissingNode() ? null : authorNode.path("death_year").asInt());
+                    List<PersonDto>authors=new ArrayList<>();
+                    JsonNode firstAuthor = result.path("authors").get(0); // Solo el primer autor
+                    if (firstAuthor != null) {
+                        PersonDto person = new PersonDto();
+                        person.setName(firstAuthor.path("name").asText());
+                        person.setBirthYear(firstAuthor.path("birth_year").isMissingNode() ? null : firstAuthor.path("birth_year").asInt());
+                        person.setDeathYear(firstAuthor.path("death_year").isMissingNode() ? null : firstAuthor.path("death_year").asInt());
                         authors.add(person);
-                    });
-                    book.setAuthors(authors);
+                    }
+                    book.setAuthor(authors);
+
 
                     // Obtener solo el primer idioma
-                    book.setLanguages(List.of(result.path("languages").get(0).asText()));
+                    book.setLanguage(result.path("languages").get(0).asText());
 
                     // Mapear el número de descargas
                     book.setDownloadCount(result.path("download_count").asInt());
@@ -70,11 +82,21 @@ public class BookCatalogService {
                         System.out.println("El libro ya existe en el catalogo: " + book.getTitle());
                         return null;
                     }
-
                     // Agregar al catálogo
-                    catalog.add(book);
-                    System.out.println("Libro agregado al catalogo: " + book);
-                    return book;
+                    //catalog.add(book);
+                    Book book1 = new Book();
+                    book1.setTitle(book.getTitle());
+                    book1.setLanguage(book.getLanguage());
+                    book1.setDownloadCount(book.getDownloadCount());
+                    book1.setId(book.getId());
+                    Person p1 = new Person();
+                    p1.setName(book.getAuthor().get(0).getName());
+                    p1.setBirthYear(book.getAuthor().get(0).getBirthYear());
+                    p1.setDeathYear(book.getAuthor().get(0).getDeathYear());
+                    Person p2=personRepository.save(p1);
+                    book1.setAuthor(p2);
+                    Book book2= bookRepository.save(book1);
+                    return book2;
                 }
             }
 
@@ -94,7 +116,7 @@ public class BookCatalogService {
      *
      * @return Lista de libros en el catálogo.
      */
-    public List<Book> getAllBooks() {
+    public List<BookDto> getAllBooks() {
         return new ArrayList<>(catalog);
     }
 
@@ -104,9 +126,9 @@ public class BookCatalogService {
      * @param language Idioma para filtrar.
      * @return Lista de libros en el idioma especificado.
      */
-    public List<Book> getBooksByLanguage(String language) {
+    public List<BookDto> getBooksByLanguage(String language) {
         return catalog.stream()
-                .filter(book -> book.getLanguages().contains(language))
+                .filter(book -> book.getLanguage().contains(language))
                 .collect(Collectors.toList());
     }
 
@@ -115,11 +137,8 @@ public class BookCatalogService {
      *
      * @return Lista de autores únicos.
      */
-    public List<Person> getAllAuthors() {
-        return catalog.stream()
-                .map(book -> book.getAuthors().get(0)) // Tomar solo el primer autor
-                .distinct() // Eliminar duplicados
-                .collect(Collectors.toList());
+    public List<PersonDto> getAllAuthors() {
+        return catalog.stream().map(bookDto -> bookDto.getAuthor().get(0)).toList();
     }
 
     /**
@@ -128,7 +147,7 @@ public class BookCatalogService {
      * @param year Año a verificar.
      * @return Lista de autores vivos en el año dado.
      */
-    public List<Person> getAuthorsAliveInYear(int year) {
+    public List<PersonDto> getAuthorsAliveInYear(int year) {
         return getAllAuthors().stream()
                 .filter(author -> {
                     Integer birthYear = author.getBirthYear();

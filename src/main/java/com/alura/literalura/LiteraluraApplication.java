@@ -1,9 +1,6 @@
 package com.alura.literalura;
 
-import com.alura.literalura.model.ApiResponse;
-import com.alura.literalura.model.Book;
-import com.alura.literalura.model.HttpClientService;
-import com.alura.literalura.model.Person;
+import com.alura.literalura.model.*;
 import com.alura.literalura.service.BookCatalogService;
 import com.alura.literalura.service.JsonParserService;
 import org.springframework.boot.CommandLineRunner;
@@ -16,7 +13,15 @@ import java.util.Scanner;
 @SpringBootApplication
 public class LiteraluraApplication implements CommandLineRunner {
 
-	public static void main(String[] args) {
+
+
+	private final BookCatalogService bookCatalogService;
+
+    public LiteraluraApplication(BookCatalogService bookCatalogService) {
+        this.bookCatalogService = bookCatalogService;
+    }
+
+    public static void main(String[] args) {
 		SpringApplication.run(LiteraluraApplication.class, args);
 	}
 
@@ -30,7 +35,7 @@ public class LiteraluraApplication implements CommandLineRunner {
 		// Inicializar servicios
 		HttpClientService clientService = new HttpClientService();
 		JsonParserService parserService = new JsonParserService();
-		BookCatalogService bookCatalogService = new BookCatalogService(); // Servicio para el catálogo de libros
+		 // Servicio para el catálogo de libros
 
 		// Scanner para capturar la entrada del usuario
 		Scanner scanner = new Scanner(System.in);
@@ -79,7 +84,6 @@ public class LiteraluraApplication implements CommandLineRunner {
 						if (apiResponse != null && apiResponse.getResults() != null && !apiResponse.getResults().isEmpty()) {
 							System.out.println("\nLista de libros por idioma:");
 							apiResponse.getResults().stream()
-									.filter(book -> book.getLanguages().contains(language))
 									.forEach(System.out::println);
 						} else {
 							System.out.println("No se encontraron libros para el idioma especificado.");
@@ -94,13 +98,13 @@ public class LiteraluraApplication implements CommandLineRunner {
 					String title = scanner.nextLine();
 					Book addedBook = bookCatalogService.searchAndAddBookByTitle(title);
 					if (addedBook != null) {
-						System.out.println("Libro agregado al catálogo: " + addedBook);
+						System.out.println("Libro agregado al catalogo: " + addedBook);
 					}
 					break;
 
 				case "4": // Listar todos los libros en el catálogo
 					System.out.println("\nLista de todos los libros en el catalogo:");
-					List<Book> allBooks = bookCatalogService.getAllBooks();
+					List<BookDto> allBooks = bookCatalogService.getAllBooks();
 					if (allBooks.isEmpty()) {
 						System.out.println("El catalogo esta vacío.");
 					} else {
@@ -112,7 +116,7 @@ public class LiteraluraApplication implements CommandLineRunner {
 					System.out.print("Ingresa el idioma (código ISO, por ejemplo 'en'): ");
 					String catalogLanguage = scanner.nextLine();
 					System.out.println("\nLista de libros en el idioma '" + catalogLanguage + "':");
-					List<Book> booksByLanguage = bookCatalogService.getBooksByLanguage(catalogLanguage);
+					List<BookDto> booksByLanguage = bookCatalogService.getBooksByLanguage(catalogLanguage);
 					if (booksByLanguage.isEmpty()) {
 						System.out.println("No hay libros en el catalogo con el idioma especificado.");
 					} else {
@@ -122,7 +126,7 @@ public class LiteraluraApplication implements CommandLineRunner {
 
 				case "6": // Listar todos los autores
 					System.out.println("\nLista de autores:");
-					List<Person> authors = bookCatalogService.getAllAuthors();
+					List<PersonDto> authors = bookCatalogService.getAllAuthors();
 					if (authors.isEmpty()) {
 						System.out.println("No hay autores en el catálogo.");
 					} else {
@@ -134,7 +138,7 @@ public class LiteraluraApplication implements CommandLineRunner {
 					System.out.print("Ingresa el año para buscar autores vivos: ");
 					try {
 						int year = Integer.parseInt(scanner.nextLine());
-						List<Person> authorsAlive = bookCatalogService.getAuthorsAliveInYear(year);
+						List<PersonDto> authorsAlive = bookCatalogService.getAuthorsAliveInYear(year);
 						if (authorsAlive.isEmpty()) {
 							System.out.println("No se encontraron autores vivos en el año " + year + ".");
 						} else {

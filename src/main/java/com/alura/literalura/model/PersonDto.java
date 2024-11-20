@@ -2,35 +2,21 @@ package com.alura.literalura.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
-@Entity
-public class Person {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+@JsonIgnoreProperties(ignoreUnknown = true) // Ignorar propiedades desconocidas
+public class PersonDto {
 
     private String name;
 
+    @JsonAlias("birth_year") // Alias para mapear correctamente
     private Integer birthYear;
 
+    @JsonAlias("death_year") // Alias para mapear correctamente
     private Integer deathYear;
 
     // Getters y Setters
     public String getName() {
         return name;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public void setName(String name) {
